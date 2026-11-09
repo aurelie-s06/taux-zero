@@ -1,35 +1,44 @@
-import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Footer } from "@/components/Footer";
+import { MainNav } from "@/components/MainNav";
+import { SkipLinks } from "@/components/SkipLinks";
+import { CLE_THEME } from "@/lib/theme";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Taux Zéro — Suivi d'alcoolémie",
+  title: {
+    default: "Taux Zéro",
+    template: "%s · Taux Zéro",
+  },
   description:
-    "Estime ton taux d'alcool dans le sang heure par heure et sache quand tu peux reprendre le volant.",
+    "Taux Zéro : estime ton taux d'alcool dans le sang heure par heure et sache quand tu peux reprendre le volant.",
 };
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#111114" },
+  ],
+};
+
+// Thème posé avant le premier affichage : pas de flash blanc en mode sombre.
+// Choix enregistré, sinon celui du système.
+const scriptTheme = `try{var t=localStorage.getItem("${CLE_THEME}");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="fr" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: scriptTheme }} />
+      </head>
+      <body>
+        <SkipLinks />
+        <MainNav />
+        <main id="contenu" tabIndex={-1} className="app-main">
+          {children}
+        </main>
+        <Footer />
+      </body>
     </html>
   );
 }

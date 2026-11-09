@@ -14,7 +14,9 @@ L'utilisateur saisit ses verres (ex. : une coupe de champagne à 20h). L'applica
 
 - [Next.js](https://nextjs.org) (App Router) + React
 - TypeScript
-- Tailwind CSS
+- CSS classique (même système visuel que mon projet Mon Budget), thème clair / sombre
+- Icônes [Lucide](https://lucide.dev)
+- Données enregistrées dans le navigateur (localStorage), aucun compte nécessaire
 
 ## Lancer le projet
 
@@ -24,3 +26,21 @@ npm run dev
 ```
 
 Puis ouvrir [http://localhost:3000](http://localhost:3000).
+
+```bash
+npm test        # tests du moteur de calcul et du profil
+npm run build   # vérifie que le projet compile
+```
+
+## Organisation
+
+```
+src/
+├── app/                 pages (Ma soirée, Profil) et styles
+├── components/          barre de navigation, jauge, formulaires…
+├── hooks/               useProfil, useEstMonte
+└── lib/
+    ├── alcool.ts        moteur de calcul (Widmark)
+    ├── profil.ts        validation du profil
+    └── stockage.ts      sauvegarde dans le navigateur
+```
