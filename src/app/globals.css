@@ -1,38 +1,81 @@
 @import "tailwindcss";
 
-/* Thème "soirée" : fond nuit, accent champagne */
+/* Thème "bar néon" : fond nuit, accents rose → orange */
 :root {
-  --background: #0d0b1a;
-  --surface: #17142b;
-  --border: #2a2547;
-  --foreground: #ece9f7;
-  --muted: #9a94b8;
-  --accent: #f5c46b; /* champagne */
-  --ok: #4ade80;
+  --background: #08070c;
+  --surface: rgb(255 255 255 / 0.04);
+  --surface-strong: rgb(255 255 255 / 0.07);
+  --border: rgb(255 255 255 / 0.09);
+  --foreground: #f4f1fa;
+  --muted: #8e8aa3;
+  --accent: #ff4d8d; /* rose néon */
+  --accent-2: #ff9f43; /* orange cocktail */
+  --ok: #a3e635;
   --warn: #fbbf24;
-  --danger: #f87171;
+  --danger: #ff5a5f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
   --color-border: var(--border);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-bricolage);
 }
 
 body {
-  background:
-    radial-gradient(circle at 20% 0%, #2a1f4d 0%, transparent 45%),
-    radial-gradient(circle at 90% 10%, #3b2a14 0%, transparent 35%),
-    var(--background);
-  background-attachment: fixed;
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Halos lumineux en fond */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  width: 38rem;
+  height: 38rem;
+  border-radius: 9999px;
+  filter: blur(120px);
+  opacity: 0.22;
+  pointer-events: none;
+}
+body::before {
+  top: -14rem;
+  left: -10rem;
+  background: var(--accent);
+}
+body::after {
+  bottom: -16rem;
+  right: -12rem;
+  background: var(--accent-2);
+}
+
+@layer components {
+  /* Carte effet verre dépoli */
+  .carte {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    border-radius: 1.5rem;
+  }
+
+  /* Texte en dégradé néon */
+  .texte-neon {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 }

@@ -1,7 +1,8 @@
 "use client";
 
+import { Jauge } from "@/components/Jauge";
 import { useEstMonte } from "@/hooks/useEstMonte";
-import { analyser, formatHeure, formatTaux, type Profil, type Verre } from "@/lib/alcool";
+import { analyser, formatHeure, grammesAlcool, type Profil, type Verre } from "@/lib/alcool";
 
 // Exemple de démonstration du moteur (sera remplacé par la saisie aux étapes 3-4)
 const profilExemple: Profil = {
@@ -10,6 +11,8 @@ const profilExemple: Profil = {
   jeunePermis: false,
   aJeun: false,
 };
+
+const EMOJIS: Record<string, string> = { "1": "🥂", "2": "🍷", "3": "🍺" };
 
 function verresExemple(): Verre[] {
   const d = new Date();
@@ -25,57 +28,107 @@ export function DemoCalcul() {
   const monte = useEstMonte();
 
   if (!monte) {
-    return <section className="h-72 animate-pulse rounded-2xl border border-border bg-surface" />;
+    return <div className="carte h-[28rem] animate-pulse" />;
   }
 
   const verres = verresExemple();
   const analyse = analyser(profilExemple, verres);
-  const analyseJeunePermis = analyser({ ...profilExemple, jeunePermis: true }, verres);
+  const analyseJP = analyser({ ...profilExemple, jeunePermis: true }, verres);
 
   return (
-    <section className="rounded-2xl border border-border bg-surface p-6">
-      <h2 className="text-lg font-semibold">Exemple de calcul</h2>
-      <p className="mt-1 text-sm text-muted">Homme, 75 kg, a mangé :</p>
-      <ul className="mt-3 space-y-1 text-sm">
-        {verres.map((v) => (
-          <li key={v.id}>
-            <span className="text-accent">{formatHeure(v.heure)}</span> — {v.nom} ({v.volumeCl} cl
-            à {v.degre}°)
-          </li>
-        ))}
-      </ul>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-display text-xl font-semibold">Exemple de soirée</h2>
+        <span className="rounded-full border border-border px-3 py-1 text-xs text-muted">
+          👤 Homme · 75 kg · a mangé
+        </span>
+      </div>
 
-      <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Stat
-          label="Pic d'alcoolémie"
-          valeur={analyse.pic ? `${formatTaux(analyse.pic.taux)} à ${formatHeure(analyse.pic.t)}` : "—"}
-        />
-        <Stat
-          label="Retour à 0 g/L"
-          valeur={analyse.heureSobre ? formatHeure(analyse.heureSobre) : "—"}
-        />
-        <Stat
-          label="Conduite (permis classique, 0,5 g/L)"
-          valeur={analyse.heureConduite ? `dès ${formatHeure(analyse.heureConduite)}` : "Possible"}
-        />
-        <Stat
-          label="Conduite (jeune permis, 0,2 g/L)"
-          valeur={
-            analyseJeunePermis.heureConduite
-              ? `dès ${formatHeure(analyseJeunePermis.heureConduite)}`
-              : "Possible"
-          }
-        />
-      </dl>
-    </section>
+      <div className="grid gap-4 md:grid-cols-[1.1fr_1fr]">
+        {/* Jauge du pic */}
+        <section className="carte flex flex-col justify-center p-6">
+          <Jauge
+            taux={analyse.pic?.taux ?? 0}
+            limite={analyse.limite}
+            legende={analyse.pic ? `pic à ${formatHeure(analyse.pic.t)}` : undefined}
+          />
+        </section>
+
+        {/* Verdicts */}
+        <section className="grid gap-3">
+          <Verdict
+            titre="Permis classique"
+            sousTitre="limite 0,5 g/L"
+            heure={analyse.heureConduite}
+          />
+          <Verdict
+            titre="Jeune permis"
+            sousTitre="limite 0,2 g/L"
+            heure={analyseJP.heureConduite}
+          />
+          <div className="carte flex items-center gap-4 p-5">
+            <span className="text-3xl">😴</span>
+            <div>
+              <p className="text-xs uppercase tracking-widest text-muted">Retour à 0 g/L</p>
+              <p className="font-display text-2xl font-bold">
+                {analyse.heureSobre ? formatHeure(analyse.heureSobre) : "—"}
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Chronologie des verres */}
+      <section className="carte p-6">
+        <h3 className="mb-4 text-xs uppercase tracking-widest text-muted">Les verres</h3>
+        <ol className="relative space-y-4 border-l border-border pl-6">
+          {verres.map((v) => (
+            <li key={v.id} className="relative">
+              <span className="absolute -left-[2.15rem] flex h-7 w-7 items-center justify-center rounded-full border border-border bg-background text-sm">
+                {EMOJIS[v.id]}
+              </span>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                <p className="font-medium">{v.nom}</p>
+                <p className="font-mono text-sm texte-neon">{formatHeure(v.heure)}</p>
+              </div>
+              <p className="text-sm text-muted">
+                {v.volumeCl} cl · {v.degre}° · ≈ {Math.round(grammesAlcool(v))} g d&apos;alcool
+              </p>
+            </li>
+          ))}
+        </ol>
+      </section>
+    </div>
   );
 }
 
-function Stat({ label, valeur }: { label: string; valeur: string }) {
+function Verdict({
+  titre,
+  sousTitre,
+  heure,
+}: {
+  titre: string;
+  sousTitre: string;
+  heure: number | null;
+}) {
+  const ok = heure === null;
   return (
-    <div className="rounded-xl border border-border bg-background/60 p-4">
-      <dt className="text-xs uppercase tracking-wide text-muted">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold">{valeur}</dd>
+    <div className="carte flex items-center gap-4 p-5">
+      <span
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-2xl ${
+          ok ? "bg-ok/15" : "bg-danger/15"
+        }`}
+      >
+        🚗
+      </span>
+      <div className="flex-1">
+        <p className="text-xs uppercase tracking-widest text-muted">
+          {titre} · {sousTitre}
+        </p>
+        <p className={`font-display text-2xl font-bold ${ok ? "text-ok" : "text-foreground"}`}>
+          {ok ? "Conduite possible" : <>Volant dès <span className="texte-neon">{formatHeure(heure)}</span></>}
+        </p>
+      </div>
     </div>
   );
 }
