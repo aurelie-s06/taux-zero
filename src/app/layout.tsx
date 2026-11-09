@@ -1,7 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Footer } from "@/components/Footer";
-import { MainNav } from "@/components/MainNav";
-import { SkipLinks } from "@/components/SkipLinks";
 import { CLE_THEME } from "@/lib/theme";
 import "./globals.css";
 
@@ -31,14 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: scriptTheme }} />
       </head>
-      <body>
-        <SkipLinks />
-        <MainNav />
-        <main id="contenu" tabIndex={-1} className="app-main">
-          {children}
-        </main>
-        <Footer />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

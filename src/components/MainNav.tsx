@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserRound, Wine } from "lucide-react";
@@ -15,9 +16,9 @@ const estActif = (chemin: string, href: string) =>
   href === "/" ? chemin === "/" : chemin.startsWith(href);
 
 /**
- * Une seule barre, collée en haut : logo, liens en pastilles et thème.
+ * Une seule barre, collée en haut : logo, liens en pastilles, thème et compte.
  */
-export function MainNav() {
+export function MainNav({ compte }: { compte?: ReactNode }) {
   const chemin = usePathname();
 
   return (
@@ -41,6 +42,7 @@ export function MainNav() {
 
         <div className="b-topbar__actions">
           <ThemeToggle />
+          {compte}
         </div>
       </div>
     </header>

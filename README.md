@@ -16,9 +16,12 @@ L'utilisateur saisit ses verres (ex. : une coupe de champagne à 20h). L'applica
 - TypeScript
 - CSS classique (même système visuel que mon projet Mon Budget), thème clair / sombre
 - Icônes [Lucide](https://lucide.dev)
-- Données enregistrées dans le navigateur (localStorage), aucun compte nécessaire
+- Comptes utilisateurs : inscription, connexion, sessions en cookie httpOnly, mots de passe hachés avec scrypt
+- Base SQLite avec `node:sqlite` (intégré à Node 24, aucun paquet à installer)
 
 ## Lancer le projet
+
+Node.js **24 ou plus** est nécessaire.
 
 ```bash
 npm install
@@ -36,11 +39,18 @@ npm run build   # vérifie que le projet compile
 
 ```
 src/
-├── app/                 pages (Ma soirée, Profil) et styles
+├── app/
+│   ├── (app)/           pages réservées aux utilisateurs connectés (Ma soirée, Profil)
+│   ├── (auth)/          connexion et inscription
+│   └── actions/         Server Actions (compte, profil)
 ├── components/          barre de navigation, jauge, formulaires…
-├── hooks/               useProfil, useEstMonte
-└── lib/
-    ├── alcool.ts        moteur de calcul (Widmark)
-    ├── profil.ts        validation du profil
-    └── stockage.ts      sauvegarde dans le navigateur
+├── lib/
+│   ├── alcool.ts        moteur de calcul (Widmark)
+│   ├── compte.ts        validation de l'inscription
+│   ├── profil.ts        validation du profil
+│   └── server/          base de données, sessions, mots de passe (code serveur uniquement)
+└── proxy.ts             renvoie vers la connexion sans cookie de session
 ```
+
+La base est créée automatiquement au premier lancement dans `data/taux-zero.sqlite` (ignorée par git).
+Pour repartir de zéro : arrêter le serveur et supprimer le dossier `data/`.

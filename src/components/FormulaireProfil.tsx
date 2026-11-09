@@ -1,10 +1,10 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useActionState, useId, useState } from "react";
 import Link from "next/link";
-import { profilStockage } from "@/hooks/useProfil";
-import { type Profil, type Sexe } from "@/lib/alcool";
-import { erreurPoids, lirePoids } from "@/lib/profil";
+import { enregistrerMonProfil } from "@/app/actions/profil";
+import { ErreurChamp } from "@/components/ErreurChamp";
+import type { Profil, Sexe } from "@/lib/alcool";
 
 interface Props {
   /** Profil déjà enregistré (null au premier remplissage) */
@@ -12,49 +12,20 @@ interface Props {
 }
 
 export function FormulaireProfil({ initial }: Props) {
+  const [etat, action, enCours] = useActionState(enregistrerMonProfil, {});
   const [sexe, setSexe] = useState<Sexe>(initial?.sexe ?? "femme");
-  const [poids, setPoids] = useState(initial ? String(initial.poidsKg).replace(".", ",") : "");
   const [jeunePermis, setJeunePermis] = useState(initial?.jeunePermis ?? false);
   const [aJeun, setAJeun] = useState(initial?.aJeun ?? false);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-
   const id = useId();
-
-  function enregistrer(e: FormEvent) {
-    e.preventDefault();
-    const poidsKg = lirePoids(poids);
-    const probleme = erreurPoids(poidsKg);
-    setErreur(probleme);
-    if (probleme) {
-      setMessage(null);
-      document.getElementById(`${id}-poids`)?.focus();
-      return;
-    }
-    profilStockage.ecrire({ sexe, poidsKg, jeunePermis, aJeun });
-    setMessage("Profil enregistré.");
-  }
-
-  function effacer() {
-    profilStockage.effacer();
-    setSexe("femme");
-    setPoids("");
-    setJeunePermis(false);
-    setAJeun(false);
-    setErreur(null);
-    setMessage("Profil effacé de ce navigateur.");
-  }
-
-  // Toute modification efface le message « enregistré »
-  const modifier =
-    <T,>(set: (v: T) => void) =>
-    (v: T) => {
-      set(v);
-      setMessage(null);
-    };
+  const erreurPoids = etat.erreurs?.poids;
 
   return (
-    <form className="b-form" onSubmit={enregistrer} noValidate>
+    <form className="b-form" action={action} noValidate>
+      {/* Les choix à boutons sont envoyés par des champs cachés */}
+      <input type="hidden" name="sexe" value={sexe} />
+      <input type="hidden" name="jeunePermis" value={String(jeunePermis)} />
+      <input type="hidden" name="aJeun" value={String(aJeun)} />
+
       <Choix
         label="Sexe"
         hint="Le corps d'une femme contient un peu moins d'eau : à poids égal, le taux monte plus haut."
@@ -63,7 +34,7 @@ export function FormulaireProfil({ initial }: Props) {
           { valeur: "femme", label: "Femme" },
           { valeur: "homme", label: "Homme" },
         ]}
-        onChange={modifier(setSexe)}
+        onChange={setSexe}
       />
 
       <div className="field">
@@ -73,24 +44,22 @@ export function FormulaireProfil({ initial }: Props) {
         <div className="field__suffix">
           <input
             id={`${id}-poids`}
+            name="poids"
             className="field__input"
             type="text"
             inputMode="decimal"
             autoComplete="off"
             required
             placeholder="ex. 62"
-            value={poids}
-            onChange={(e) => modifier(setPoids)(e.target.value)}
-            aria-invalid={erreur ? true : undefined}
-            aria-describedby={`${id}-poids-aide${erreur ? ` ${id}-poids-erreur` : ""}`}
+            defaultValue={
+              etat.valeurs?.poids ?? (initial ? String(initial.poidsKg).replace(".", ",") : "")
+            }
+            aria-invalid={erreurPoids ? true : undefined}
+            aria-describedby={`${id}-poids-aide${erreurPoids ? ` ${id}-poids-erreur` : ""}`}
           />
           <span aria-hidden="true">kg</span>
         </div>
-        {erreur && (
-          <p id={`${id}-poids-erreur`} className="field__error">
-            {erreur}
-          </p>
-        )}
+        <ErreurChamp id={`${id}-poids-erreur`} message={erreurPoids} />
         <p id={`${id}-poids-aide`} className="field__hint">
           Plus le poids est élevé, plus l&apos;alcool est dilué dans le corps.
         </p>
@@ -104,7 +73,7 @@ export function FormulaireProfil({ initial }: Props) {
           { valeur: false, label: "Classique · 0,5 g/L" },
           { valeur: true, label: "Jeune permis · 0,2 g/L" },
         ]}
-        onChange={modifier(setJeunePermis)}
+        onChange={setJeunePermis}
       />
 
       <Choix
@@ -115,32 +84,24 @@ export function FormulaireProfil({ initial }: Props) {
           { valeur: false, label: "Oui, pendant un repas" },
           { valeur: true, label: "Non, à jeun" },
         ]}
-        onChange={modifier(setAJeun)}
+        onChange={setAJeun}
       />
 
       <div className="b-row">
-        <button type="submit" className="btn btn--primary">
-          Enregistrer
+        <button type="submit" className="btn btn--primary" disabled={enCours}>
+          {enCours ? "Enregistrement…" : "Enregistrer"}
         </button>
-        {initial && (
-          <button type="button" className="btn btn--ghost" onClick={effacer}>
-            Effacer mon profil
-          </button>
-        )}
-      </div>
-
-      <p role="status" className="field__hint">
-        {message && (
-          <>
-            {message}{" "}
-            {message === "Profil enregistré." && (
+        <p role="status" className="field__hint">
+          {etat.message && !enCours && (
+            <>
+              {etat.message}{" "}
               <Link href="/" className="il">
                 Voir ma soirée
               </Link>
-            )}
-          </>
-        )}
-      </p>
+            </>
+          )}
+        </p>
+      </div>
     </form>
   );
 }
