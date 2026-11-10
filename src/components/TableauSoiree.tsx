@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { Beer, Martini, Wine } from "lucide-react";
+import {
+  Apple,
+  Beer,
+  CupSoda,
+  GlassWater,
+  Martini,
+  Trash2,
+  Wine,
+  type LucideIcon,
+} from "lucide-react";
+import { supprimerUnVerre, viderMaSoiree } from "@/app/actions/verres";
+import { FormulaireVerre } from "@/components/FormulaireVerre";
 import { Jauge } from "@/components/Jauge";
-import { useEstMonte } from "@/hooks/useEstMonte";
+import { useMaintenant } from "@/hooks/useMaintenant";
 import {
   analyser,
+  formatDuree,
   formatHeure,
   formatTaux,
   grammesAlcool,
@@ -14,88 +26,165 @@ import {
 } from "@/lib/alcool";
 import { libelles } from "@/lib/profil";
 
-// Verres d'exemple : la saisie arrive à l'étape 4
-function verresExemple(): Verre[] {
-  const d = new Date();
-  const a20h = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 20, 0).getTime();
-  return [
-    { id: "1", nom: "Coupe de champagne", volumeCl: 12, degre: 12, heure: a20h },
-    { id: "2", nom: "Verre de vin rouge", volumeCl: 12, degre: 13, heure: a20h + 45 * 60_000 },
-    { id: "3", nom: "Pinte de bière", volumeCl: 50, degre: 5, heure: a20h + 90 * 60_000 },
-  ];
-}
+const ICONES: Record<string, LucideIcon> = {
+  champagne: Wine,
+  vin: Wine,
+  biere: Beer,
+  cidre: Apple,
+  spiritueux: GlassWater,
+  cocktail: Martini,
+};
 
-const ICONES = { "1": Martini, "2": Wine, "3": Beer } as Record<string, typeof Wine>;
+const virgule = (n: number) => String(n).replace(".", ",");
 
-/** Tuiles de la soirée. Calculées dans le navigateur, à l'heure de l'utilisateur. */
-export function TableauSoiree({ profil }: { profil: Profil }) {
-  const monte = useEstMonte();
+/** Ma soirée : taux en direct, heure de reprise du volant, verres et ajout d'un verre */
+export function TableauSoiree({ profil, verres }: { profil: Profil; verres: Verre[] }) {
+  // Calcul dans le navigateur, à l'heure de l'utilisateur, rafraîchi toutes les 30 s
+  const maintenant = useMaintenant();
 
-  if (!monte) {
+  if (maintenant === null) {
     return (
-      <div className="b-dash" aria-hidden="true">
-        <div className="b-skeleton b-span-4" />
-        <div className="b-skeleton b-span-4" />
-        <div className="b-skeleton b-span-4" />
+      <div className="b-soiree" aria-hidden="true">
+        <div className="b-dash b-soiree__dash">
+          <div className="b-skeleton b-span-6" />
+          <div className="b-skeleton b-span-6" />
+        </div>
+        <div className="b-skeleton b-soiree__ajout" style={{ minHeight: 420 }} />
       </div>
     );
   }
 
-  const verres = verresExemple();
-  const analyse = analyser(profil, verres);
-  const pic = analyse.pic?.taux ?? 0;
-  const depasse = analyse.heureConduite !== null;
-  const ratioLimite = Math.round((pic / analyse.limite) * 100);
+  const analyse = analyser(profil, verres, maintenant);
+  const { tauxActuel, limite, pic, heureConduite, heureSobre } = analyse;
+  const doitAttendre = heureConduite !== null && heureConduite > maintenant;
+  const encoreDeLAlcool = heureSobre !== null && heureSobre > maintenant;
+  const ratio = Math.round((tauxActuel / limite) * 100);
+  // L'échelle de la jauge s'agrandit si la soirée dépasse 1 g/L
+  const max = Math.max(1, Math.ceil((pic?.taux ?? 0) * 2) / 2);
 
   return (
-    <div className="b-dash">
-      {/* Pic */}
-      <section className="b-tile b-span-4">
-        <h2 className="b-tile__label">Taux maximal estimé</h2>
-        <Jauge taux={pic} limite={analyse.limite} />
-        <p className="b-tile__hint" style={{ textAlign: "center" }}>
-          {analyse.pic ? `Atteint vers ${formatHeure(analyse.pic.t)}` : "Aucun verre"} · repère :
-          limite {formatTaux(analyse.limite)}
-        </p>
-      </section>
+    // Ordre sur mobile : taux, ajout d'un verre, liste, profil
+    <div className="b-soiree">
+      <div className="b-dash b-soiree__dash">
+        {/* Taux maintenant */}
+        <section className="b-tile b-span-6">
+          <h2 className="b-tile__label">Taux estimé maintenant</h2>
+          <Jauge taux={tauxActuel} limite={limite} max={max} />
+          <p className="b-tile__hint" style={{ textAlign: "center" }}>
+            {pic && pic.taux > 0
+              ? `Pic : ${formatTaux(pic.taux)} vers ${formatHeure(pic.t)}`
+              : "Aucun verre pour l'instant"}{" "}
+            · repère : limite {formatTaux(limite)}
+          </p>
+        </section>
 
-      {/* Volant */}
-      <section className="b-tile b-span-4">
-        <h2 className="b-tile__label">Reprendre le volant</h2>
-        <div className={`b-tile__value ${depasse ? "" : "b-amount--in"}`}>
-          {depasse ? `Dès ${formatHeure(analyse.heureConduite!)}` : "Possible"}
-        </div>
-        <p className="b-tile__hint">
-          {depasse
-            ? `Heure à laquelle tu repasses sous ${formatTaux(analyse.limite)}.`
-            : `Tu ne dépasses pas ${formatTaux(analyse.limite)}.`}
-        </p>
-        <dl className="b-figures" style={{ marginTop: 16 }}>
+        {/* Volant */}
+        <section className="b-tile b-span-6">
+          <h2 className="b-tile__label">Reprendre le volant</h2>
+          <div className={`b-tile__value ${doitAttendre ? "" : "b-amount--in"}`}>
+            {doitAttendre ? `Dès ${formatHeure(heureConduite)}` : "Possible"}
+          </div>
+          <p className="b-tile__hint">
+            {doitAttendre
+              ? `Encore ${formatDuree(heureConduite - maintenant)} avant de repasser sous ${formatTaux(limite)}.`
+              : heureConduite !== null
+                ? `Sous la limite de ${formatTaux(limite)} depuis ${formatHeure(heureConduite)}.`
+                : `Tu ne dépasses pas ${formatTaux(limite)}.`}
+          </p>
+          <dl className="b-figures" style={{ marginTop: 16 }}>
+            <div>
+              <dt>Limite ({libelles.permis(profil).toLowerCase()})</dt>
+              <dd>{formatTaux(limite)}</dd>
+            </div>
+            <div className="b-figures__total">
+              <dt>Retour à 0 g/L</dt>
+              <dd>{encoreDeLAlcool ? formatHeure(heureSobre) : "Déjà atteint"}</dd>
+            </div>
+          </dl>
+          <div className="b-rate">
+            <div className="b-bar">
+              <div
+                className="b-bar__fill"
+                style={{
+                  width: `${Math.min(ratio, 100)}%`,
+                  background: ratio >= 100 ? "var(--out)" : "var(--ink)",
+                }}
+              />
+            </div>
+            <span className="b-tile__hint">Taux actuel : {ratio} % de la limite</span>
+          </div>
+        </section>
+      </div>
+
+      {/* Verres */}
+      <section className="b-tile b-soiree__verres">
+        <header className="b-tile__head">
           <div>
-            <dt>Limite</dt>
-            <dd>{formatTaux(analyse.limite)}</dd>
+            <h2 className="section__title">
+              Verres de la soirée <span className="b-badge">{verres.length}</span>
+            </h2>
+            <p className="section__description">Les verres des dernières 24 heures.</p>
           </div>
-          <div className="b-figures__total">
-            <dt>Retour à 0 g/L</dt>
-            <dd>{analyse.heureSobre ? formatHeure(analyse.heureSobre) : "—"}</dd>
-          </div>
-        </dl>
-        <div className="b-rate">
-          <div className="b-bar">
-            <div
-              className="b-bar__fill"
-              style={{
-                width: `${Math.min(ratioLimite, 100)}%`,
-                background: ratioLimite >= 100 ? "var(--out)" : "var(--ink)",
+          {verres.length > 0 && (
+            <form
+              action={viderMaSoiree}
+              onSubmit={(ev) => {
+                if (!window.confirm("Effacer tous les verres de la soirée ?")) ev.preventDefault();
               }}
-            />
-          </div>
-          <span className="b-tile__hint">Pic à {ratioLimite} % de la limite</span>
-        </div>
+            >
+              <button type="submit" className="b-link b-link--danger">
+                Nouvelle soirée
+              </button>
+            </form>
+          )}
+        </header>
+
+        {verres.length === 0 ? (
+          <p className="b-empty">
+            Aucun verre pour l&apos;instant. Ajoute ton premier verre avec le formulaire.
+          </p>
+        ) : (
+          <ul>
+            {[...verres].reverse().map((v) => {
+              const Icone = ICONES[v.categorie ?? ""] ?? CupSoda;
+              return (
+                <li key={v.id} className="b-item">
+                  <span className="b-item__icon">
+                    <Icone size={18} aria-hidden="true" />
+                  </span>
+                  <div className="b-item__main">
+                    <div className="b-item__title">{v.nom}</div>
+                    <div className="b-item__meta">
+                      {virgule(v.volumeCl)} cl · {virgule(v.degre)}° · ≈{" "}
+                      {Math.round(grammesAlcool(v))} g d&apos;alcool
+                    </div>
+                  </div>
+                  <span className="b-amount">{formatHeure(v.heure)}</span>
+                  <form action={supprimerUnVerre.bind(null, v.id)}>
+                    <button
+                      type="submit"
+                      className="iconbtn iconbtn--danger"
+                      aria-label={`Supprimer : ${v.nom} de ${formatHeure(v.heure)}`}
+                      title="Supprimer ce verre"
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                    </button>
+                  </form>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
-      {/* Profil */}
-      <section className="b-tile b-span-4">
+      <section className="panel b-soiree__ajout" aria-labelledby="titre-ajout">
+        <h2 id="titre-ajout" className="section__title" style={{ marginBottom: 16 }}>
+          Ajouter un verre
+        </h2>
+        <FormulaireVerre maintenant={maintenant} />
+      </section>
+
+      <section className="b-tile b-soiree__profil">
         <header className="b-tile__head">
           <h2 className="b-tile__label">Mon profil</h2>
           <Link href="/profil" className="b-link">
@@ -120,40 +209,6 @@ export function TableauSoiree({ profil }: { profil: Profil }) {
             <dd>{libelles.repas(profil)}</dd>
           </div>
         </dl>
-      </section>
-
-      {/* Verres */}
-      <section className="b-tile b-span-12">
-        <header className="b-tile__head">
-          <div>
-            <h2 className="section__title">
-              Verres de la soirée <span className="b-badge">Exemple</span>
-            </h2>
-            <p className="section__description">
-              Une soirée type pour tester le calcul avec ton profil. Tu pourras bientôt ajouter
-              tes propres verres.
-            </p>
-          </div>
-        </header>
-        <ul>
-          {verres.map((v) => {
-            const Icone = ICONES[v.id] ?? Wine;
-            return (
-              <li key={v.id} className="b-item">
-                <span className="b-item__icon">
-                  <Icone size={18} aria-hidden="true" />
-                </span>
-                <div className="b-item__main">
-                  <div className="b-item__title">{v.nom}</div>
-                  <div className="b-item__meta">
-                    {v.volumeCl} cl · {v.degre}° · ≈ {Math.round(grammesAlcool(v))} g d&apos;alcool
-                  </div>
-                </div>
-                <span className="b-amount">{formatHeure(v.heure)}</span>
-              </li>
-            );
-          })}
-        </ul>
       </section>
     </div>
   );

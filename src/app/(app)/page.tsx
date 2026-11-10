@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { TableauSoiree } from "@/components/TableauSoiree";
-import { lireMonProfil } from "@/lib/server/donnees";
+import { lireMaSoiree, lireMonProfil } from "@/lib/server/donnees";
 
 export default function MaSoiree() {
   return (
@@ -10,7 +10,9 @@ export default function MaSoiree() {
       <header className="page__header">
         <div>
           <h1 className="page__title">Ma soirée</h1>
-          <p className="page__description">Ton taux d&apos;alcool estimé, verre après verre.</p>
+          <p className="page__description">
+            Note tes verres : ton taux d&apos;alcool est estimé en direct.
+          </p>
         </div>
       </header>
 
@@ -43,15 +45,18 @@ async function Soiree() {
     );
   }
 
-  return <TableauSoiree profil={profil} />;
+  const verres = await lireMaSoiree();
+  return <TableauSoiree profil={profil} verres={verres} />;
 }
 
 function Squelettes() {
   return (
-    <div className="b-dash" aria-hidden="true">
-      <div className="b-skeleton b-span-4" />
-      <div className="b-skeleton b-span-4" />
-      <div className="b-skeleton b-span-4" />
+    <div className="b-soiree" aria-hidden="true">
+      <div className="b-dash b-soiree__dash">
+        <div className="b-skeleton b-span-6" />
+        <div className="b-skeleton b-span-6" />
+      </div>
+      <div className="b-skeleton b-soiree__ajout" style={{ minHeight: 420 }} />
     </div>
   );
 }

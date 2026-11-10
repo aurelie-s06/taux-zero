@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   analyser,
+  formatDuree,
   grammesAlcool,
   limiteLegale,
   simuler,
@@ -76,4 +77,11 @@ test("le taux ne descend jamais sous 0", () => {
   const points = simuler(homme, [coupeChampagne(VINGT_HEURES)]);
   assert.ok(points.every((p) => p.taux >= 0));
   assert.equal(points[points.length - 1].taux, 0);
+});
+
+test("formatDuree : heures et minutes", () => {
+  assert.equal(formatDuree(45 * 60_000), "45 min");
+  assert.equal(formatDuree(H), "1 h");
+  assert.equal(formatDuree(2 * H + 5 * 60_000), "2 h 05");
+  assert.equal(formatDuree(-1000), "0 min");
 });

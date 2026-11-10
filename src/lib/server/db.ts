@@ -34,6 +34,18 @@ const SCHEMA = `
     a_jeun          INTEGER NOT NULL,
     modifie_le      INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS verres (
+    id              INTEGER PRIMARY KEY,
+    utilisateur_id  INTEGER NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+    nom             TEXT    NOT NULL,
+    categorie       TEXT    NOT NULL,
+    volume_cl       REAL    NOT NULL,
+    degre           REAL    NOT NULL,
+    bu_le           INTEGER NOT NULL,  -- timestamp en ms
+    cree_le         INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS verres_utilisateur_bu_le ON verres (utilisateur_id, bu_le);
 `;
 
 // En développement, le rechargement à chaud réévalue ce fichier :

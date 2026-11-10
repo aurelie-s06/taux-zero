@@ -2,7 +2,9 @@
 
 Application Next.js qui estime le **taux d'alcool dans le sang** au fil de la soirée.
 
-L'utilisateur saisit ses verres (ex. : une coupe de champagne à 20h). L'application calcule :
+L'utilisateur crée un compte, répond une seule fois à un court questionnaire (sexe, poids, permis, repas),
+puis note ses verres au fil de la soirée (ex. : une coupe de champagne à 20h), choisis dans un catalogue
+ou personnalisés. L'application calcule, en direct :
 
 - son alcoolémie estimée heure par heure ;
 - l'heure à laquelle il peut **reprendre le volant** (0,5 g/L, ou 0,2 g/L en permis probatoire) ;
@@ -46,6 +48,7 @@ src/
 ├── components/          barre de navigation, jauge, formulaires…
 ├── lib/
 │   ├── alcool.ts        moteur de calcul (Widmark)
+│   ├── boissons.ts      catalogue des boissons, validation d'un verre
 │   ├── compte.ts        validation de l'inscription
 │   ├── profil.ts        validation du profil
 │   └── server/          base de données, sessions, mots de passe (code serveur uniquement)

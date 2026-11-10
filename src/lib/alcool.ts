@@ -33,6 +33,8 @@ export interface Verre {
   degre: number;
   /** Heure à laquelle le verre a été bu (timestamp en ms) */
   heure: number;
+  /** Type de boisson (champagne, vin…), pour l'icône */
+  categorie?: string;
 }
 
 export interface Point {
@@ -214,6 +216,15 @@ export function formatHeure(t: number): string {
   const h = d.getHours();
   const m = d.getMinutes().toString().padStart(2, "0");
   return `${h}h${m}`;
+}
+
+/** Formate une durée en "2 h 10", "1 h" ou "45 min" */
+export function formatDuree(ms: number): string {
+  const totalMin = Math.max(0, Math.round(ms / MINUTE));
+  const h = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  if (h === 0) return `${min} min`;
+  return min === 0 ? `${h} h` : `${h} h ${String(min).padStart(2, "0")}`;
 }
 
 /** Formate un taux en "0,42 g/L" */
