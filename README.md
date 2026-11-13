@@ -1,5 +1,7 @@
 # 🥂 Taux Zéro
 
+[![CI](https://github.com/aurelie-s06/taux-zero/actions/workflows/ci.yml/badge.svg)](https://github.com/aurelie-s06/taux-zero/actions/workflows/ci.yml)
+
 Application Next.js qui estime le **taux d'alcool dans le sang** au fil de la soirée.
 
 L'utilisateur crée un compte, répond une seule fois à un court questionnaire (sexe, poids, permis, repas),
@@ -63,6 +65,17 @@ npm run build   # vérifie que le projet compile
 La base est créée automatiquement au premier lancement dans `data/taux-zero.sqlite` (ignorée par git).
 Pour repartir de zéro : arrêter le serveur et supprimer le dossier `data/`.
 
+## Intégration continue (GitHub Actions)
+
+Le workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) tourne à chaque `git push` et pull request :
+
+1. **Lint, tests et build** sous Node 24 ;
+2. sur `main`, si tout est vert : **construction de l'image Docker** et publication sur le registre
+   de GitHub, `ghcr.io/aurelie-s06/taux-zero` (étiquettes `latest` et `sha-xxxxxxx`).
+
+Le résultat se suit dans l'onglet **Actions** du dépôt ; le badge en haut de ce README passe au vert
+quand tout va bien.
+
 ## Organisation
 
 ```
@@ -91,7 +104,17 @@ SQLite enregistre les données dans un **fichier** : il faut donc un hébergeur 
 entre deux redémarrages (Railway, Render avec un disque, Fly.io, un VPS…). Vercel ne convient pas
 tel quel. Le projet fournit un `Dockerfile` qui fonctionne chez tous ces hébergeurs.
 
-### Tester l'image en local
+### Lancer l'image publiée par GitHub
+
+```bash
+docker run -p 3000:3000 -v taux-zero-data:/data ghcr.io/aurelie-s06/taux-zero:latest
+```
+
+Une image publiée sur GitHub est **privée** au départ. Pour que n'importe qui (ou un hébergeur)
+puisse la télécharger : sur la page du dépôt, **Packages → taux-zero → Package settings →
+Change visibility → Public**.
+
+### Construire l'image soi-même
 
 ```bash
 docker build -t taux-zero .
