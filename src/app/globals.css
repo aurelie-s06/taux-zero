@@ -1086,7 +1086,7 @@ button.b-link {
   grid-template-columns: minmax(0, 1fr) 320px;
   grid-template-areas:
     "dash ajout"
-    "verres ajout"
+    "courbe ajout"
     "verres profil";
   gap: 16px 24px;
   align-items: start;
@@ -1103,13 +1103,16 @@ button.b-link {
 .b-soiree__verres {
   grid-area: verres;
 }
+.b-soiree__courbe {
+  grid-area: courbe;
+}
 .b-soiree__profil {
   grid-area: profil;
 }
 @media (max-width: 880px) {
   .b-soiree {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "dash" "ajout" "verres" "profil";
+    grid-template-areas: "dash" "ajout" "courbe" "verres" "profil";
   }
 }
 @media (max-width: 720px) {
@@ -1129,4 +1132,187 @@ select.field__input {
 .iconbtn--danger:hover {
   color: var(--out);
   border-color: var(--out);
+}
+
+/* ==========================================================================
+   Courbe du taux
+   ========================================================================== */
+.b-courbe {
+  position: relative;
+  width: 100%;
+  min-height: 240px;
+}
+.b-courbe svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+  border-radius: var(--r);
+}
+.b-courbe svg:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 4px;
+}
+.b-courbe__grille {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+.b-courbe__axe {
+  fill: var(--muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.b-courbe__aire {
+  fill: var(--ink);
+  opacity: 0.06;
+}
+.b-courbe__ligne {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.b-courbe__ligne--dessus {
+  stroke: var(--out);
+}
+.b-courbe__limite {
+  stroke: var(--out);
+  stroke-width: 1.5;
+}
+.b-courbe__verre {
+  fill: var(--ink-2);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+.b-courbe__maintenant,
+.b-courbe__curseur {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.b-courbe__curseur {
+  stroke: var(--ink);
+}
+.b-courbe__point {
+  fill: var(--ink);
+  stroke: var(--card);
+  stroke-width: 2;
+}
+.b-courbe__point--dessus {
+  fill: var(--out);
+}
+
+/* Infobulle : valeur en premier, détails ensuite */
+.b-infobulle {
+  position: absolute;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 200px;
+  padding: 8px 10px;
+  background: var(--card);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35);
+  font-size: 12.5px;
+  color: var(--muted);
+  pointer-events: none;
+}
+.b-infobulle strong {
+  font-size: 15px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Légende */
+.b-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-bottom: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.b-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.b-legend__line {
+  width: 14px;
+  height: 2px;
+  border-radius: 2px;
+}
+.b-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-2);
+}
+
+/* Données chiffrées sous le graphique */
+.b-chart-data {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.b-chart-data summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+.b-chart-data summary:hover {
+  color: var(--ink);
+}
+.b-chart-data[open] summary {
+  margin-bottom: 8px;
+}
+.b-table-wrap {
+  overflow-x: auto;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.b-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.b-table th {
+  text-align: left;
+  padding: 0 12px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+.b-table td,
+.b-table tbody th {
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.b-table td.b-amount--in {
+  color: var(--in);
+}
+.b-table td.b-amount--out {
+  color: var(--out);
+}
+.b-table th:first-child,
+.b-table td:first-child {
+  padding-left: 0;
+}
+.b-num,
+.b-table .b-num {
+  text-align: right;
+}
+/* Texte posé sur le graphique : contour couleur du fond, lisible même si la courbe passe dessous */
+.b-courbe__etiquette {
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 4px;
+  stroke-linejoin: round;
 }

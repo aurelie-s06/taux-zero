@@ -8,7 +8,8 @@ ou personnalisés. L'application calcule, en direct :
 
 - son alcoolémie estimée heure par heure ;
 - l'heure à laquelle il peut **reprendre le volant** (0,5 g/L, ou 0,2 g/L en permis probatoire) ;
-- l'heure à laquelle il revient à **0 g/L**.
+- l'heure à laquelle il revient à **0 g/L** ;
+- la **courbe** de son taux au fil de la soirée, avec la limite légale et un repère « maintenant ».
 
 > ⚠️ Les résultats sont **des estimations** (formule de Widmark). Ils ne remplacent pas un éthylotest. Dans le doute, ne prends pas le volant.
 

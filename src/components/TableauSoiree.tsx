@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { supprimerUnVerre, viderMaSoiree } from "@/app/actions/verres";
+import { CourbeTaux } from "@/components/CourbeTaux";
 import { FormulaireVerre } from "@/components/FormulaireVerre";
 import { Jauge } from "@/components/Jauge";
 import { useMaintenant } from "@/hooks/useMaintenant";
@@ -115,6 +116,27 @@ export function TableauSoiree({ profil, verres }: { profil: Profil; verres: Verr
           </div>
         </section>
       </div>
+
+      {/* Courbe de la soirée */}
+      {verres.length > 0 && (
+        <section className="b-tile b-soiree__courbe">
+          <header className="b-tile__head">
+            <div>
+              <h2 className="section__title">Ton taux au fil de la soirée</h2>
+              <p className="section__description">
+                Survole ou touche la courbe (ou utilise les flèches du clavier) pour lire le taux à
+                chaque heure.
+              </p>
+            </div>
+          </header>
+          <CourbeTaux
+            points={analyse.points}
+            limite={limite}
+            maintenant={maintenant}
+            verres={verres}
+          />
+        </section>
+      )}
 
       {/* Verres */}
       <section className="b-tile b-soiree__verres">
