@@ -46,6 +46,13 @@ const SCHEMA = `
     cree_le         INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS verres_utilisateur_bu_le ON verres (utilisateur_id, bu_le);
+
+  -- Essais de connexion et d'inscription, pour freiner les essais en boucle
+  CREATE TABLE IF NOT EXISTS tentatives (
+    cle  TEXT    NOT NULL,  -- « connexion:email:… », « connexion:ip:… »…
+    le   INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS tentatives_cle_le ON tentatives (cle, le);
 `;
 
 // En développement, le rechargement à chaud réévalue ce fichier :

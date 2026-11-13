@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { ErreurChamp } from "@/components/ErreurChamp";
 
@@ -39,6 +39,16 @@ export function ChampMotDePasse({
   const [visible, setVisible] = useState(false);
   const [saisie, setSaisie] = useState("");
   const niveau = solidite(saisie);
+  const champ = useRef<HTMLInputElement>(null);
+
+  // Formulaire remis à zéro (après un envoi) : le champ est vidé, l'indicateur aussi
+  useEffect(() => {
+    const formulaire = champ.current?.form;
+    if (!formulaire) return;
+    const vider = () => setSaisie("");
+    formulaire.addEventListener("reset", vider);
+    return () => formulaire.removeEventListener("reset", vider);
+  }, []);
 
   const decritPar = [
     aide && `${id}-aide`,
@@ -57,6 +67,7 @@ export function ChampMotDePasse({
       )}
       <div className="b-password">
         <input
+          ref={champ}
           id={id}
           name={name}
           type={visible ? "text" : "password"}

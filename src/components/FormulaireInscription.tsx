@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { inscription } from "@/app/actions/compte";
 import { ChampMotDePasse } from "@/components/ChampMotDePasse";
 import { ErreurChamp, propsChamp } from "@/components/ErreurChamp";
@@ -13,6 +14,12 @@ export function FormulaireInscription() {
   return (
     <form action={action} className="auth__form" noValidate>
       <p className="field__hint">Les champs marqués d&apos;un astérisque (*) sont obligatoires.</p>
+
+      {etat.message && (
+        <p className="b-alert" role="alert">
+          {etat.message}
+        </p>
+      )}
 
       <div className="field">
         <label className="field__label" htmlFor="prenom">
@@ -76,7 +83,34 @@ export function FormulaireInscription() {
         />
       </div>
 
-      <button type="submit" className="btn btn--primary btn--block" disabled={enCours} style={{ marginTop: 4 }}>
+      <div className="field">
+        <label className="b-check">
+          <input
+            type="checkbox"
+            name="consentement"
+            value="oui"
+            required
+            defaultChecked={etat.valeurs?.consentement === "oui"}
+            {...propsChamp("consentement-erreur", e.consentement)}
+          />
+          <span>
+            J&apos;accepte que mon profil et mes verres soient enregistrés pour calculer mon taux,
+            comme décrit dans la{" "}
+            <Link href="/confidentialite" className="il" target="_blank">
+              politique de confidentialité
+            </Link>
+            .
+          </span>
+        </label>
+        <ErreurChamp id="consentement-erreur" message={e.consentement} />
+      </div>
+
+      <button
+        type="submit"
+        className="btn btn--primary btn--block"
+        disabled={enCours}
+        style={{ marginTop: 4 }}
+      >
         {enCours ? "Création…" : "Créer mon compte"}
       </button>
     </form>

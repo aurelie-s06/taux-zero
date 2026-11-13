@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * inutile d'afficher l'application, on part directement à la connexion.
  * (La vraie vérification, en base, est faite dans chaque page et chaque action.)
  */
-const PAGES_PUBLIQUES = ["/connexion", "/inscription"];
+const PAGES_PUBLIQUES = ["/connexion", "/inscription", "/confidentialite"];
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;

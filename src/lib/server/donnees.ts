@@ -109,7 +109,11 @@ export function compterVerresSoiree(utilisateurId: number): number {
   return r.n;
 }
 
+/** Les verres sont effacés automatiquement après 48 h : on ne garde que le nécessaire */
+export const CONSERVATION_VERRES_MS = 48 * 60 * 60 * 1000;
+
 export function ajouterVerre(utilisateurId: number, categorie: Categorie, v: SaisieVerre) {
+  db().prepare("DELETE FROM verres WHERE bu_le < ?").run(Date.now() - CONSERVATION_VERRES_MS);
   db()
     .prepare(
       `INSERT INTO verres (utilisateur_id, nom, categorie, volume_cl, degre, bu_le, cree_le)

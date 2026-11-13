@@ -33,6 +33,8 @@ export function validerInscription(champs: {
   email: string;
   motDePasse: string;
   confirmation: string;
+  /** Acceptation de la politique de confidentialité */
+  consentement: boolean;
 }): Erreurs {
   const erreurs: Erreurs = {};
   if (champs.prenom.length > PRENOM_MAX) {
@@ -44,6 +46,10 @@ export function validerInscription(champs: {
   if (mdp) erreurs.motDePasse = mdp;
   else if (champs.confirmation !== champs.motDePasse) {
     erreurs.confirmation = "Les deux mots de passe ne sont pas identiques.";
+  }
+  if (!champs.consentement) {
+    erreurs.consentement =
+      "Pour créer un compte, accepte que tes données soient traitées comme décrit dans la politique de confidentialité.";
   }
   return erreurs;
 }

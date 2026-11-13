@@ -1316,3 +1316,71 @@ select.field__input {
   stroke-width: 4px;
   stroke-linejoin: round;
 }
+
+/* Case à cocher avec son texte */
+.b-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+  text-wrap: pretty;
+  cursor: pointer;
+}
+.b-check input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: var(--ink);
+}
+.b-check input[aria-invalid="true"] {
+  outline: 2px solid var(--out);
+  outline-offset: 1px;
+}
+
+/* ==========================================================================
+   Pages de texte (confidentialité)
+   ========================================================================== */
+.b-prose-page {
+  max-width: 780px;
+}
+.b-prose p,
+.b-prose ul {
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  text-wrap: pretty;
+}
+.b-prose ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+.b-prose li + li {
+  margin-top: 4px;
+}
+.b-prose code {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--paper);
+  border: 1px solid var(--line-2);
+}
+.b-prose .b-figures {
+  margin-top: 10px;
+}
+/* Libellé + texte long : le texte passe sous le libellé */
+.b-figures--texte > div {
+  flex-direction: column;
+  gap: 2px;
+}
+.b-figures--texte dd {
+  text-align: left;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+.b-figures--texte > div + div {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
